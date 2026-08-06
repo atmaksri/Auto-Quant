@@ -13,6 +13,7 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -40,9 +41,8 @@ PROJECT_DIR = Path(__file__).parent.resolve()
 USER_DATA = PROJECT_DIR / "user_data"
 CONFIG = PROJECT_DIR / "config.json"
 
-import json as _json
 try:
-    _cfg = _json.load(open(PROJECT_DIR / "config.json"))
+    _cfg = json.load(open(CONFIG))
     EXCHANGE = _cfg.get("exchange", {}).get("name", "binance")
     PAIRS = _cfg.get("exchange", {}).get("pair_whitelist")
     if not PAIRS:
