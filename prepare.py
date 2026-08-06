@@ -40,8 +40,16 @@ PROJECT_DIR = Path(__file__).parent.resolve()
 USER_DATA = PROJECT_DIR / "user_data"
 CONFIG = PROJECT_DIR / "config.json"
 
-EXCHANGE = "binance"
-PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "AVAX/USDT"]
+import json as _json
+try:
+    _cfg = _json.load(open(PROJECT_DIR / "config.json"))
+    EXCHANGE = _cfg.get("exchange", {}).get("name", "binance")
+    PAIRS = _cfg.get("exchange", {}).get("pair_whitelist")
+    if not PAIRS:
+        PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "AVAX/USDT"]
+except Exception:
+    EXCHANGE = "binance"
+    PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "AVAX/USDT"]
 TIMEFRAMES = ["1h", "4h", "1d"]
 # v0.4.0: extended from 2023-2025 (bull only) to 2021-2025 to include
 # the 2022 winter regime. Cross-pair macro signals + bear-regime
