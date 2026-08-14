@@ -63,6 +63,7 @@ class ETHTrailingTrend(IStrategy):
     def populate_indicators_4h(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe["ema50"] = ta.EMA(dataframe, timeperiod=50)
         dataframe["ema200"] = ta.EMA(dataframe, timeperiod=200)
+        dataframe["adx"] = ta.ADX(dataframe, timeperiod=14)
         return dataframe
 
     @informative("1d")
@@ -80,9 +81,12 @@ class ETHTrailingTrend(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Trend stack: 4h regime + 1h structure + bull context
+        # Trend stack: 4h regime + ADX trend strength + 1h structure + bull
+        # context. r4: added ADX>20 to kill chop entries (r3 fired 272 times
+        # in chop, -13% train).
         dataframe.loc[
             (dataframe["ema50_4h"] > dataframe["ema200_4h"])
+            & (dataframe["adx_4h"] > 20)
             & (dataframe["ema20"] > dataframe["ema50"])
             & (dataframe["close"] > dataframe["ema20"])
             & (dataframe["close"] > dataframe["ema200"])
@@ -92,7 +96,8 @@ class ETHTrailingTrend(IStrategy):
         return dataframe
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Exit is handled by trailing_stop. Keep exit signal as a hard
-        # structure-break safety net (close below 1h EMA50 = trend dead).
-        dataframe.loc[dataframe["close"] < dataframe["ema50"], "exit_long"] = 1
+        # r4: exit signal EMA50→EMA20 (tighter sell). r3's slow EMA50 exit
+        # gave back too much in chop; EMA20 sells earlier. Trailing stop
+        # still the primary ratchet for winners.
+        dataframe.loc[dataframe["close"] < dataframe["ema20"], "exit_long"] = 1
         return dataframe
