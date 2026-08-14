@@ -76,8 +76,10 @@ class ETHCrashRebound(IStrategy):
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         # -20% DD + RSI<35 + volume capitulation + 1d regime slope
         # (r24 finding: single-bar DD trigger + RSI is the local optimum)
+        # r5: DD -0.20→-0.17 to lift train trade count (26 in r1-r4 is thin
+        # for a robust claim; holdout 11 trades is borderline). Keep RSI<35.
         dataframe.loc[
-            (dataframe["drawdown_pct"] < -0.20)
+            (dataframe["drawdown_pct"] < -0.17)
             & (dataframe["rsi"] < 35)
             & (dataframe["ema200_slope_up_1d"] == 1)
             & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
