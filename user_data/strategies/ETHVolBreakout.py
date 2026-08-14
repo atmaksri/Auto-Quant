@@ -32,14 +32,11 @@ class ETHVolBreakout(IStrategy):
 
     minimal_roi = {"0": 100}
     stoploss = -0.99
-    # r6: add trailing ratchet on top of SMA50 exit. After +15% profit,
-    # stop ratchets to 8% below peak — protects winners in bull runs
-    # while SMA50 breakdown remains the primary exit (r5 ablation showed
-    # RSI>75 exit worse; trailing is a different protection mechanism).
-    trailing_stop = True
-    trailing_stop_positive = 0.08
-    trailing_stop_positive_offset = 0.15
-    trailing_only_offset_is_reached = True
+    # r7: trailing_stop reverted to False. r6 experiment (ratchet +15%/
+    # 8%) hurt robust 0.1017→0.0746 — SMA50 breakdown is the local
+    # optimum exit for this entry. Both exit modifications tried
+    # (RSI>75 r5, trailing r6) lost to patient breakdown.
+    trailing_stop = False
     process_only_new_candles = True
     use_exit_signal = True
     exit_profit_only = False
