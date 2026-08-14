@@ -47,7 +47,9 @@ class ETHBreakoutATRStop(IStrategy):
     ]
 
     # ATR-stop: distance in ATR multiples from entry
-    atr_stop_mult = 3.0
+    # r12: 3.0→1.5 — r11 showed 3×ATR never binds (SMA50 exits first).
+    # 1.5×ATR is tighter than the SMA50 exit on many trades → binding.
+    atr_stop_mult = 1.5
 
     @informative("4h")
     def populate_indicators_4h(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
