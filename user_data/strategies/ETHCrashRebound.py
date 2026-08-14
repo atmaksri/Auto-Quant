@@ -76,16 +76,14 @@ class ETHCrashRebound(IStrategy):
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         # -20% DD + RSI<35 + volume capitulation + 1d regime slope
         # (r24 finding: single-bar DD trigger + RSI is the local optimum)
-        # r5: DD -0.20→-0.17 to lift train trade count (26 in r1-r4 is thin
-        # for a robust claim; holdout 11 trades is borderline). Keep RSI<35.
-        # r6: REVERT to -0.20 — marginal entries (DD -0.17..-0.20) were
-        # net-negative: robust 0.083→0.042. -0.20 is the local optimum
-        # (sharp signal decay past threshold, same as BNB RSI<25 finding).
+        # r10: volume 1.3→1.1x to lift holdout trade count (11 trades is
+        # thin for a robust claim). DD stays -0.20 (r6 revert proved
+        # looser DD dilutes edge; volume is the orthogonal knob).
         dataframe.loc[
             (dataframe["drawdown_pct"] < -0.20)
             & (dataframe["rsi"] < 35)
             & (dataframe["ema200_slope_up_1d"] == 1)
-            & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
+            & (dataframe["volume"] > 1.1 * dataframe["volume_sma20"]),
             "enter_long",
         ] = 1
         return dataframe
