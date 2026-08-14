@@ -62,18 +62,17 @@ class ETHVolBreakout(IStrategy):
         return dataframe
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Per-pair Donchian-24 prior-bar high (exclude current bar to avoid
-        # self-reference at break detection)
-        dataframe["donchian_high_24"] = dataframe["high"].rolling(24).max().shift(1)
+        # Per-pair Donchian-48 prior-bar high — r8: 24→48 (window
+        # sensitivity test; longer breakout = more confirmed trend)
+        dataframe["donchian_high_48"] = dataframe["high"].rolling(48).max().shift(1)
         dataframe["sma50"] = ta.SMA(dataframe, timeperiod=50)
         dataframe["volume_sma20"] = dataframe["volume"].rolling(20).mean()
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Donchian-24 break + 4h regime gate + volume confirmation
-        # (r6 finding: 1.3x volume is the local optimum, not 1.4x)
+        # Donchian-48 break + 4h regime gate + volume confirmation
         dataframe.loc[
-            (dataframe["close"] > dataframe["donchian_high_24"])
+            (dataframe["close"] > dataframe["donchian_high_48"])
             & (dataframe["ema50_4h"] > dataframe["ema200_4h"])
             & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
             "enter_long",
