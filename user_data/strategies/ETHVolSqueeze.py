@@ -69,18 +69,19 @@ class ETHVolSqueeze(IStrategy):
         dataframe["bb_width_pctile"] = dataframe["bb_width"].rolling(365).apply(
             lambda w: (w[-1] < w).mean(), raw=True
         )
-        # Squeeze-range high: Donchian of the last 120 bars while squeezed
-        dataframe["donchian_high_120"] = dataframe["high"].rolling(120).max().shift(1)
+        # Squeeze-range high: Donchian of the last 60 bars while squeezed
+        dataframe["donchian_high_60"] = dataframe["high"].rolling(60).max().shift(1)
         dataframe["sma50"] = ta.SMA(dataframe, timeperiod=50)
         dataframe["rsi"] = ta.RSI(dataframe, timeperiod=14)
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Squeeze (width percentile < 0.20) + expansion breakout above the
-        # 120-bar range high + bull regime. RSI<70 avoids chasing verticals.
+        # r9: squeeze pctile <0.20→<0.35 and break window 120→60 bars.
+        # r8 had 6+2 trades — too strict, no sample. Loosen to get
+        # tradable count while keeping volatility-state entry.
         dataframe.loc[
-            (dataframe["bb_width_pctile"] < 0.20)
-            & (dataframe["close"] > dataframe["donchian_high_120"])
+            (dataframe["bb_width_pctile"] < 0.35)
+            & (dataframe["close"] > dataframe["donchian_high_60"])
             & (dataframe["close"] > dataframe["bb_mid"])
             & (dataframe["ema200_slope_up_1d"] == 1)
             & (dataframe["rsi"] < 70),
