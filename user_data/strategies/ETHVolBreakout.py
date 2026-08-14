@@ -103,7 +103,11 @@ class ETHVolBreakout(IStrategy):
         atr_pct = df["atr_pct_4h"].iloc[-1]
         if atr_pct != atr_pct or atr_pct <= 0:
             return proposed_stake
-        vol_target = 0.003
+        # r2: vol_target 0.003→0.008. r1 showed 0.003 de-risks too hard —
+        # avg_position 3.36% FAILs the 5% min-position gate and crushes
+        # absolute profit. 0.008 ≈ 0.8% ATR per trade → ~8-10% positions
+        # in normal vol, still de-risks in bear (ATR balloons).
+        vol_target = 0.008
         scale = min(1.0, vol_target / atr_pct)
         stake = proposed_stake * scale
         return max(min_stake or 0.0, min(max_stake, stake))

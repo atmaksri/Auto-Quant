@@ -53,11 +53,13 @@ class ETHMomentumTrend(IStrategy):
 
     @informative("4h")
     def populate_indicators_4h(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        macd, signal, hist = ta.MACD(dataframe, fastperiod=12, slowperiod=26, signalperiod=9)
-        dataframe["macd"] = macd
-        dataframe["macd_signal"] = signal
-        dataframe["macd_hist"] = hist
+        macd_df = ta.MACD(dataframe, fastperiod=12, slowperiod=26, signalperiod=9)
+        dataframe["macd"] = macd_df["macd"]
+        dataframe["macd_signal"] = macd_df["macdsignal"]
+        dataframe["macd_hist"] = macd_df["macdhist"]
         dataframe["adx"] = ta.ADX(dataframe, timeperiod=14)
+        dataframe["ema50"] = ta.EMA(dataframe, timeperiod=50)
+        dataframe["ema200"] = ta.EMA(dataframe, timeperiod=200)
         return dataframe
 
     @informative("1d")
@@ -77,9 +79,12 @@ class ETHMomentumTrend(IStrategy):
         # Momentum + trend strength + regime. NO volume filter —
         # v0.4.1 r24 finding: volume filter HURTS momentum/continuation.
         # NO close>donchian — this is momentum riding, not breakout.
+        # r2: added 4h EMA50>EMA200 gate (v0.4.1 'second gold filter' —
+        # flipped winter negative→positive on PerPairMR alts branch).
         dataframe.loc[
             (dataframe["macd_hist_4h"] > 0)
             & (dataframe["adx_4h"] > 25)
+            & (dataframe["ema50_4h"] > dataframe["ema200_4h"])
             & (dataframe["ema200_slope_up_1d"] == 1)
             & (dataframe["close"] > dataframe["ema20"])
             & (dataframe["ema20"] > dataframe["sma50"]),
