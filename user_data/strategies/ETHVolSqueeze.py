@@ -64,8 +64,10 @@ class ETHVolSqueeze(IStrategy):
         dataframe["bb_mid"] = sma
         # BB width normalized — squeeze = width in bottom 20% of last 365d
         dataframe["bb_width"] = (dataframe["bb_upper"] - dataframe["bb_lower"]) / sma
+        # Percentile of CURRENT width within trailing 365d window
+        # (r8 fix: compare w[-1] against window, not full series)
         dataframe["bb_width_pctile"] = dataframe["bb_width"].rolling(365).apply(
-            lambda w: (w < dataframe["bb_width"]).mean(), raw=True
+            lambda w: (w[-1] < w).mean(), raw=True
         )
         # Squeeze-range high: Donchian of the last 120 bars while squeezed
         dataframe["donchian_high_120"] = dataframe["high"].rolling(120).max().shift(1)
