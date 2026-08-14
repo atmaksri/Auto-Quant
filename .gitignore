@@ -17,6 +17,13 @@ user_data/logs/
 user_data/hyperopt_results/
 user_data/notebooks/.ipynb_checkpoints/
 
+# Runtime config fragments + trade DBs — local-only, never push (may hold secrets)
+user_data/paper_config.json
+user_data/telegram_config.json
+user_data/*.sqlite
+user_data/*.sqlite-shm
+user_data/*.sqlite-wal
+
 # Python / uv
 __pycache__/
 *.pyc
