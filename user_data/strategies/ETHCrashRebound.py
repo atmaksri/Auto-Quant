@@ -78,8 +78,11 @@ class ETHCrashRebound(IStrategy):
         # (r24 finding: single-bar DD trigger + RSI is the local optimum)
         # r5: DD -0.20→-0.17 to lift train trade count (26 in r1-r4 is thin
         # for a robust claim; holdout 11 trades is borderline). Keep RSI<35.
+        # r6: REVERT to -0.20 — marginal entries (DD -0.17..-0.20) were
+        # net-negative: robust 0.083→0.042. -0.20 is the local optimum
+        # (sharp signal decay past threshold, same as BNB RSI<25 finding).
         dataframe.loc[
-            (dataframe["drawdown_pct"] < -0.17)
+            (dataframe["drawdown_pct"] < -0.20)
             & (dataframe["rsi"] < 35)
             & (dataframe["ema200_slope_up_1d"] == 1)
             & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
