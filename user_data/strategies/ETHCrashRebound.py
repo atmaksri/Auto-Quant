@@ -88,12 +88,10 @@ class ETHCrashRebound(IStrategy):
         return dataframe
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r14: exit close>SMA50 → RSI>55. The bounce-exit question: does
-        # selling on momentum strength (RSI>55, earlier) beat selling on
-        # price-reclaim (close>SMA50, later) for ETH capitulation bounces?
-        # (r5 exit ablation on breakout said SMA50 wins; counter-trend may
-        # differ — v0.4.1 found counter-trend MR prefers TIGHT exits.)
-        dataframe.loc[dataframe["rsi"] > 55, "exit_long"] = 1
+        # r15: REVERT RSI>55 → close>SMA50. r14 split: train liked RSI
+        # exit, holdout strongly preferred price-reclaim. robust=min makes
+        # close>SMA50 optimal for this paradigm.
+        dataframe.loc[dataframe["close"] > dataframe["sma50"], "exit_long"] = 1
         return dataframe
 
     def custom_stake_amount(

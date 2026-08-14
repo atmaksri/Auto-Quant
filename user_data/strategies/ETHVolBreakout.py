@@ -72,12 +72,11 @@ class ETHVolBreakout(IStrategy):
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         # Donchian-48 break + 4h regime gate + volume confirmation
-        # r14: volume 1.3→1.5 — window sweep showed 'fewer better trades'
-        # wins (24→48); does tighter volume confirm continue that?
+        # r15: volume 1.5→1.3 (REVERT — r14 slightly worse, 1.3 optimum)
         dataframe.loc[
             (dataframe["close"] > dataframe["donchian_high_48"])
             & (dataframe["ema50_4h"] > dataframe["ema200_4h"])
-            & (dataframe["volume"] > 1.5 * dataframe["volume_sma20"]),
+            & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
             "enter_long",
         ] = 1
         return dataframe
