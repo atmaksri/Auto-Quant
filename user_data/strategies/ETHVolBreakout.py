@@ -117,11 +117,12 @@ class ETHVolBreakout(IStrategy):
         atr_pct = df["atr_pct_4h"].iloc[-1]
         if atr_pct != atr_pct or atr_pct <= 0:
             return proposed_stake
-        # r17 A: vol_target 0.008→0.015. r2 0.003→0.008 fixed min_position
-        # 3.36%->8.9% PASS; 0.015 ≈ 1.5% ATR per trade → ~16% positions in
-        # normal vol, profit scales ~linearly (5.6%->~10% train) while
-        # DD 2.4%->~4.5% stays single-digit. Still de-risks in bear.
-        vol_target = 0.015
+        # r19: vol_target 0.015→0.022. r18 A alone 5.59->8.42 (+50%) at
+        # near-constant sharpe (0.19->0.17); linear cost is ~0.02 sharpe
+        # per +7% position. 0.022 ≈ 2.2% ATR → ~22% positions, profit
+        # ~8.4%->~11-12% toward 20% floor, DD 4.1%->~6% stays single-digit.
+        # Still caps at 1.0 (max 20% proposed stake), de-risks in bear.
+        vol_target = 0.022
         scale = min(1.0, vol_target / atr_pct)
         stake = proposed_stake * scale
         return max(min_stake or 0.0, min(max_stake, stake))
