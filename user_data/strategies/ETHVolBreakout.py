@@ -76,13 +76,11 @@ class ETHVolBreakout(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r24 proven: volume 1.3->1.0 lifts 134->137 / 30->32 with sharpe
-        # 0.169->0.184 — keep. r25: Donchian 48->36 (tighter breakout window,
-        # more trades toward 20% floor via count). 48 is prior optimum
-        # (sweep 24->0.10/48->0.20/72->0.11) at vol 0.008 context; at
-        # 0.018+vol1.0 re-sweep 36. If hurts, revert r26 to 48.
+        # r26: REVERT Donchian 36->48. r25 48->36 hurt: +25 train trades
+        # but profit 9.92->9.80 / 9.49->8.51, pf 1.34->1.28 down (marginals
+        # dilute). Confirms 48 optimum even at vol1.0. Keep volume 1.0.
         dataframe.loc[
-            (dataframe["close"] > dataframe["donchian_high_36"])
+            (dataframe["close"] > dataframe["donchian_high_48"])
             & (dataframe["ema50_4h"] > dataframe["ema200_4h"])
             & (dataframe["volume"] > 1.0 * dataframe["volume_sma20"]),
             "enter_long",
