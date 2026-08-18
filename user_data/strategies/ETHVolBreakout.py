@@ -68,24 +68,21 @@ class ETHVolBreakout(IStrategy):
         return dataframe
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Per-pair Donchian-48 prior-bar high — r13: 72→48 (REVERT.
-        # Window sweep: 24→0.10, 48→0.20, 72→0.11 — 48 is the local
-        # optimum; longer misses early-cycle breaks)
+        # r25: Donchian 36 in entry, keep 48 for fallback revert.
         dataframe["donchian_high_48"] = dataframe["high"].rolling(48).max().shift(1)
+        dataframe["donchian_high_36"] = dataframe["high"].rolling(36).max().shift(1)
         dataframe["sma50"] = ta.SMA(dataframe, timeperiod=50)
-        # r18: SMA100 removed — kept only for r17 B, now reverted to SMA50
-        # (see populate_exit_trend). Dead code removed to keep dataframe lean.
         dataframe["volume_sma20"] = dataframe["volume"].rolling(20).mean()
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r24: volume 1.3->1.0 (trade-count lift for 20% floor push).
-        # r15 sweep 1.5 vs 1.3 showed 1.3 optimum (0.196->0.182), but that
-        # was at 0.008 size. At 0.018 size with reclaimed SMA50, volume may
-        # be non-binding (like CrashRebound r10): looser = more trades
-        # (134->~160) without quality loss. If hurts, revert r25.
+        # r24 proven: volume 1.3->1.0 lifts 134->137 / 30->32 with sharpe
+        # 0.169->0.184 — keep. r25: Donchian 48->36 (tighter breakout window,
+        # more trades toward 20% floor via count). 48 is prior optimum
+        # (sweep 24->0.10/48->0.20/72->0.11) at vol 0.008 context; at
+        # 0.018+vol1.0 re-sweep 36. If hurts, revert r26 to 48.
         dataframe.loc[
-            (dataframe["close"] > dataframe["donchian_high_48"])
+            (dataframe["close"] > dataframe["donchian_high_36"])
             & (dataframe["ema50_4h"] > dataframe["ema200_4h"])
             & (dataframe["volume"] > 1.0 * dataframe["volume_sma20"]),
             "enter_long",
