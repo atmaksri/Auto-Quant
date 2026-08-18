@@ -79,12 +79,15 @@ class ETHVolBreakout(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Donchian-48 break + 4h regime gate + volume confirmation
-        # r15: volume 1.5→1.3 (REVERT — r14 slightly worse, 1.3 optimum)
+        # r24: volume 1.3->1.0 (trade-count lift for 20% floor push).
+        # r15 sweep 1.5 vs 1.3 showed 1.3 optimum (0.196->0.182), but that
+        # was at 0.008 size. At 0.018 size with reclaimed SMA50, volume may
+        # be non-binding (like CrashRebound r10): looser = more trades
+        # (134->~160) without quality loss. If hurts, revert r25.
         dataframe.loc[
             (dataframe["close"] > dataframe["donchian_high_48"])
             & (dataframe["ema50_4h"] > dataframe["ema200_4h"])
-            & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
+            & (dataframe["volume"] > 1.0 * dataframe["volume_sma20"]),
             "enter_long",
         ] = 1
         return dataframe
