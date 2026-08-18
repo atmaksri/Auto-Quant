@@ -63,12 +63,16 @@ class ETHTrendSMA(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Trend entry: 1h EMA50>EMA200 + ADX confirms momentum + 1d bull + volume
+        # r21: tighten trend gate ADX 20->25 + volume 1.2->1.5 to cut chop
+        # (r20: 168/41 trades but 88% train->holdout profit decay: 7.38%->1.30%
+        # and worst DD -7.77 vs VolBreakout -4.56. Fewer, cleaner trends
+        # should lift pf 1.19->~1.4 and holdout robustness; if still decay
+        # -> kill r22).
         dataframe.loc[
             (dataframe["ema50"] > dataframe["ema200"])
-            & (dataframe["adx"] > 20)
+            & (dataframe["adx"] > 25)
             & (dataframe["close"] > dataframe["ema200_1d"])
-            & (dataframe["volume"] > 1.2 * dataframe["volume_sma20"]),
+            & (dataframe["volume"] > 1.5 * dataframe["volume_sma20"]),
             "enter_long",
         ] = 1
         return dataframe
