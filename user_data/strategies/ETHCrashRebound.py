@@ -79,14 +79,14 @@ class ETHCrashRebound(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r22: RSI 35->40 (MUST: counter 3). r21 0.102 robust on only 28/10
-        # trades — sparse by construction (DD<-20% rare). RSI<40 loosens
-        # entry 1.2x toward ~35/14 trades, targeting worst_profit 2.27% up
-        # toward 5-8% (still far from 20% — floor requires cadence change
-        # not just size). If RSI<40 hurts WR/pf, revert r23.
+        # r23: REVERT RSI 40->35. r22 35->40 hurt: +3 holdout trades but
+        # profit 7.67->5.96 train / 2.27->1.82 holdout, pf 1.99->1.74,
+        # robust 0.102->0.081. Confirms RSI<35 is local optimum (r5 DD
+        # -0.20 optimum pattern, BNB RSI<25). Keep 35, accept 28/13
+        # sparse but high-quality (WR 71%, pf 1.75) — sparse is feature.
         dataframe.loc[
             (dataframe["drawdown_pct"] < -0.20)
-            & (dataframe["rsi"] < 40)
+            & (dataframe["rsi"] < 35)
             & (dataframe["ema200_slope_up_1d"] == 1),
             "enter_long",
         ] = 1
