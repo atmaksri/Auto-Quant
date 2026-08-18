@@ -63,16 +63,14 @@ class ETHTrendSMA(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r21 proven: ADX25+vol1.5 fixed TrendSMA 0.074->0.209 (13.13%/3.32%,
-        # 108/29 trades). r26: volume 1.5->1.3 test (MUST: counter 3).
-        # Train 13.13% already large vs holdout 3.32%: volume may be
-        # binding — looser 1.3 -> more trades, maybe higher worst profit.
-        # If hurts, revert r27.
+        # r27: REVERT vol 1.3->1.5. r26 1.5->1.3 hurt: profit 13.13->10.35
+        # /3.32->2.61, sharpe 0.209->0.168, DD 5.03->5.85. Confirms 1.5
+        # optimum (r21 fix is tight optimum, extra trades are chop).
         dataframe.loc[
             (dataframe["ema50"] > dataframe["ema200"])
             & (dataframe["adx"] > 25)
             & (dataframe["close"] > dataframe["ema200_1d"])
-            & (dataframe["volume"] > 1.3 * dataframe["volume_sma20"]),
+            & (dataframe["volume"] > 1.5 * dataframe["volume_sma20"]),
             "enter_long",
         ] = 1
         return dataframe

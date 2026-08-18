@@ -79,12 +79,11 @@ class ETHCrashRebound(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r23: RSI 40->35 revert confirmed local optimum. r26: DD -0.20->-0.17
-        # test (MUST: counter 3). r5 DD -0.17 hurt 0.083->0.042 and r22 RSI 40
-        # hurt, but r21 vol removal helped. At vol-filter-free r23 state,
-        # DD -0.17 may now behave differently (re-sweep). If hurts, revert r27.
+        # r27: REVERT DD -0.17->-0.20. r26 -0.20->-0.17 hurt: +60% count but
+        # profit 7.67->6.34/2.27->1.47, pf 1.99->1.54. Confirms DD -0.20 is
+        # sharp optimum (r5 family, second confirmation at vol-free state).
         dataframe.loc[
-            (dataframe["drawdown_pct"] < -0.17)
+            (dataframe["drawdown_pct"] < -0.20)
             & (dataframe["rsi"] < 35)
             & (dataframe["ema200_slope_up_1d"] == 1),
             "enter_long",
