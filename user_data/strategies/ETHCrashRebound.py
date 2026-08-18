@@ -79,14 +79,14 @@ class ETHCrashRebound(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r21: volume filter REMOVED (-20% DD + RSI<35 + slope_up already
-        # spikes volume by construction: r10 no-op 1.3->1.1 identical,
-        # so volume is non-binding). Removing it lifts trade count from
-        # 26->~30 (r10 proved no loss) and focuses the thesis on DD+RSI.
-        # Sparse holdout (10 trades) is the binding constraint.
+        # r22: RSI 35->40 (MUST: counter 3). r21 0.102 robust on only 28/10
+        # trades — sparse by construction (DD<-20% rare). RSI<40 loosens
+        # entry 1.2x toward ~35/14 trades, targeting worst_profit 2.27% up
+        # toward 5-8% (still far from 20% — floor requires cadence change
+        # not just size). If RSI<40 hurts WR/pf, revert r23.
         dataframe.loc[
             (dataframe["drawdown_pct"] < -0.20)
-            & (dataframe["rsi"] < 35)
+            & (dataframe["rsi"] < 40)
             & (dataframe["ema200_slope_up_1d"] == 1),
             "enter_long",
         ] = 1

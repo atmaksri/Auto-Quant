@@ -117,12 +117,12 @@ class ETHVolBreakout(IStrategy):
         atr_pct = df["atr_pct_4h"].iloc[-1]
         if atr_pct != atr_pct or atr_pct <= 0:
             return proposed_stake
-        # r20: vol_target 0.022→0.030. r19 0.015->0.022 lift 8.4->10.1
-        # train / 8.4->9.75 holdout (+20%) at stable sharpe 0.17; DD
-        # 4.10->4.52 (+0.4). Linear scaling holds (profit ∝ position).
-        # 0.030 ≈ 3% ATR → ~24% avg position, profit ~10%->~13% toward
-        # 20% floor, DD ~4.5%->~6% still single-digit. Push again.
-        vol_target = 0.030
+        # r22: vol_target 0.030→0.018 MIDDLE. r20 0.030 capped (21% pos,
+        # only 10.77%/9.21% vs 10.12%/9.75% at 0.022 — diminishing, holdout
+        # -0.54). r18 0.015 gave 8.42%/8.43% at 0.17 sharpe. 0.018 ~18% pos
+        # recaptures sharpe (target ~0.18) while keeping profit >9% — better
+        # Pareto than 0.030 (pareto-d by r8 0.196/-2.43). Size ceiling proven.
+        vol_target = 0.018
         scale = min(1.0, vol_target / atr_pct)
         stake = proposed_stake * scale
         return max(min_stake or 0.0, min(max_stake, stake))
