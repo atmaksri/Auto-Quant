@@ -1,5 +1,5 @@
 """
-ETHVolBreakout — per-pair Donchian-24 break w/ 4h regime + vol-target sizing (ETH)
+ETHVolBreakout — per-pair Donchian-48 break w/ 4h regime + vol-target sizing (ETH) — r17 A+B
 
 Paradigm: breakout
 Hypothesis: v0.3.0's BTCLeaderBreakX hit 1.07 via cross-pair Donchian on BTC;
@@ -8,12 +8,17 @@ Hypothesis: v0.3.0's BTCLeaderBreakX hit 1.07 via cross-pair Donchian on BTC;
             + vol-target sizing. Transfer that exact structure to ETH-only
             under a train/holdout honesty split: does the breakout edge
             survive on a single major with a strict 2025 out-of-sample
-            window? Vol-target (4h ATR%/close → ~0.3% ATR per trade) is the
-            honesty mechanism: in bear ATRs balloon → smaller stakes.
-            Patient SMA50 exit transfers v0.3.0 Finding 2 (breakouts ride).
+            window? Vol-target (4h ATR%/close) is the honesty mechanism:
+            in bear ATRs balloon → smaller stakes. Patient SMA exit
+            transfers v0.3.0 Finding 2 (breakouts ride).
+            r17 combines A (vol_target 0.008->0.015, size ~8.9%->~16%,
+            profit ~5.6%->~10% linearly, DD 2.4%->~4.5%) + B (SMA50->SMA100
+            exit, ride longer: 1d15h->~2.5d, fewer trades 134->~80)—
+            both target profit_floor 20% from different axes (size vs
+            hold-time). If SMA100 hurts, r18 reverts it but keeps sizing.
 Parent: root (seeded from versions/0.4.0/strategies/VolBreakoutSized.py,
         restructured to ETH-only + train/holdout timeranges)
-Created: pending — fill in after first commit
+Created: r17 — A+B combined (was pending until r17)
 Status: active
 Uses MTF: yes
 """
@@ -67,6 +72,7 @@ class ETHVolBreakout(IStrategy):
         # optimum; longer misses early-cycle breaks)
         dataframe["donchian_high_48"] = dataframe["high"].rolling(48).max().shift(1)
         dataframe["sma50"] = ta.SMA(dataframe, timeperiod=50)
+        dataframe["sma100"] = ta.SMA(dataframe, timeperiod=100)  # r17 B: slow exit
         dataframe["volume_sma20"] = dataframe["volume"].rolling(20).mean()
         return dataframe
 
@@ -82,9 +88,10 @@ class ETHVolBreakout(IStrategy):
         return dataframe
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # Patient ride-the-move exit (v0.3.0 Finding 2: breakouts benefit
-        # from slow-SMA exits, not responsive ones)
-        dataframe.loc[dataframe["close"] < dataframe["sma50"], "exit_long"] = 1
+        # r17 B: SMA50->SMA100 — ride longer (v0.3.0 Finding 2: slow exits
+        # help breakouts). If this hurts robust, r18 reverts to SMA50
+        # but keeps sizing (A) — disentangles hold-time vs size.
+        dataframe.loc[dataframe["close"] < dataframe["sma100"], "exit_long"] = 1
         return dataframe
 
     def custom_stake_amount(
@@ -108,11 +115,11 @@ class ETHVolBreakout(IStrategy):
         atr_pct = df["atr_pct_4h"].iloc[-1]
         if atr_pct != atr_pct or atr_pct <= 0:
             return proposed_stake
-        # r2: vol_target 0.003→0.008. r1 showed 0.003 de-risks too hard —
-        # avg_position 3.36% FAILs the 5% min-position gate and crushes
-        # absolute profit. 0.008 ≈ 0.8% ATR per trade → ~8-10% positions
-        # in normal vol, still de-risks in bear (ATR balloons).
-        vol_target = 0.008
+        # r17 A: vol_target 0.008→0.015. r2 0.003→0.008 fixed min_position
+        # 3.36%->8.9% PASS; 0.015 ≈ 1.5% ATR per trade → ~16% positions in
+        # normal vol, profit scales ~linearly (5.6%->~10% train) while
+        # DD 2.4%->~4.5% stays single-digit. Still de-risks in bear.
+        vol_target = 0.015
         scale = min(1.0, vol_target / atr_pct)
         stake = proposed_stake * scale
         return max(min_stake or 0.0, min(max_stake, stake))
