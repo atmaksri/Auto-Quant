@@ -1,5 +1,5 @@
 """
-ETHVolBreakout — per-pair Donchian-48 break w/ 4h regime + vol-target sizing (ETH) — r17 A+B
+ETHVolBreakout — per-pair Donchian-48 break w/ 4h regime + vol-target sizing (ETH) — r18
 
 Paradigm: breakout
 Hypothesis: v0.3.0's BTCLeaderBreakX hit 1.07 via cross-pair Donchian on BTC;
@@ -11,11 +11,12 @@ Hypothesis: v0.3.0's BTCLeaderBreakX hit 1.07 via cross-pair Donchian on BTC;
             window? Vol-target (4h ATR%/close) is the honesty mechanism:
             in bear ATRs balloon → smaller stakes. Patient SMA exit
             transfers v0.3.0 Finding 2 (breakouts ride).
-            r17 combines A (vol_target 0.008->0.015, size ~8.9%->~16%,
-            profit ~5.6%->~10% linearly, DD 2.4%->~4.5%) + B (SMA50->SMA100
-            exit, ride longer: 1d15h->~2.5d, fewer trades 134->~80)—
-            both target profit_floor 20% from different axes (size vs
-            hold-time). If SMA100 hurts, r18 reverts it but keeps sizing.
+            r17 A+B combined size (0.015) + SMA100: profit 5.6%->8.5%
+            but sharp 0.19->0.12, pareto-dominated by r8. r18 keeps A
+            (vol_target 0.015 stays ~16% position) and reverts B
+            (SMA100->SMA50) to disentangle hold-time vs size — tests
+            whether A alone clears more toward 20% at r8's risk-adjusted
+            speed.
 Parent: root (seeded from versions/0.4.0/strategies/VolBreakoutSized.py,
         restructured to ETH-only + train/holdout timeranges)
 Created: r17 — A+B combined (was pending until r17)
@@ -72,7 +73,8 @@ class ETHVolBreakout(IStrategy):
         # optimum; longer misses early-cycle breaks)
         dataframe["donchian_high_48"] = dataframe["high"].rolling(48).max().shift(1)
         dataframe["sma50"] = ta.SMA(dataframe, timeperiod=50)
-        dataframe["sma100"] = ta.SMA(dataframe, timeperiod=100)  # r17 B: slow exit
+        # r18: SMA100 removed — kept only for r17 B, now reverted to SMA50
+        # (see populate_exit_trend). Dead code removed to keep dataframe lean.
         dataframe["volume_sma20"] = dataframe["volume"].rolling(20).mean()
         return dataframe
 
@@ -88,10 +90,10 @@ class ETHVolBreakout(IStrategy):
         return dataframe
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # r17 B: SMA50->SMA100 — ride longer (v0.3.0 Finding 2: slow exits
-        # help breakouts). If this hurts robust, r18 reverts to SMA50
-        # but keeps sizing (A) — disentangles hold-time vs size.
-        dataframe.loc[dataframe["close"] < dataframe["sma100"], "exit_long"] = 1
+        # r18: REVERT SMA100->SMA50. r17 B hurt robust 0.19->0.12
+        # (2d18h hold winrate 33.9%<35.1%, pf 1.29<1.41). Keep A sizing
+        # (vol_target 0.015) but restore r8 exit speed — tests A alone.
+        dataframe.loc[dataframe["close"] < dataframe["sma50"], "exit_long"] = 1
         return dataframe
 
     def custom_stake_amount(
