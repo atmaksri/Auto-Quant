@@ -1,0 +1,23 @@
+{
+  "exchange": {
+    "pair_whitelist": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "XRP/USDT",
+      "ADA/USDT",
+      "AVAX/USDT",
+      "DOGE/USDT",
+      "LINK/USDT",
+      "DOT/USDT",
+      "LTC/USDT",
+      "ATOM/USDT",
+      "UNI/USDT",
+      "NEAR/USDT",
+      "APT/USDT",
+      "ARB/USDT",
+      "OP/USDT",
+      "SUI/USDT"
+    ]
+  }
+}

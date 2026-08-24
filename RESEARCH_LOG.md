@@ -21,3 +21,18 @@ All four externally-proposed families now evaluated:
 Production lineup unchanged and further validated by contrast:
 ETHTrendSMA + ETHCrashRebound remain the complete viable set for
 long-only spot ETH.
+
+## r31b — multi-pair basket scaling (2026-08-24)
+MULTITrendSMA: TrendSMA logic generalized to a 17-pair Binance.US liquid
+majors basket (max_open_trades=4, relative-strength rank filter).
+train **-0.61 Sharpe / -20.1% / 680 trades**, holdout -0.37.
+DECISIVE FAILURE vs the ETH-only parent (+0.19 / +12.8%).
+
+Finding: the validated ETH trend edge does not transfer to alts by
+naive replication. Alt pairs mean-revert harder and have noisier
+volume confirms; the ETH-only focus of this program was a feature,
+not a limitation. Multi-pair would need per-pair calibration and
+stricter selection gates to be worth revisiting.
+
+Also this round: run.py PAIRS extended to the 17-pair basket;
+user_data/basket_config.json fragment added for future research runs.

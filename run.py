@@ -68,6 +68,11 @@ CONFIG = PROJECT_DIR / "config.json"
 
 DEFAULT_TIMERANGE = "20210101-20251231"
 PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "AVAX/USDT"]
+# r31: multi-pair basket extension (MULTITrendSMA). Binance.US liquid majors
+# with >=2y of 1h history on this exchange (INJ/TIA/SEI dropped — too young).
+PAIRS += ["XRP/USDT", "ADA/USDT", "DOGE/USDT", "LINK/USDT", "DOT/USDT",
+          "LTC/USDT", "ATOM/USDT", "UNI/USDT", "NEAR/USDT", "APT/USDT",
+          "ARB/USDT", "OP/USDT", "SUI/USDT"]
 PAIRS_STR = ",".join(PAIRS)
 
 # Multi-objective gates (v0.4.1)
