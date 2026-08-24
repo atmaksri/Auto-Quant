@@ -50,7 +50,7 @@ try:
 except Exception:
     EXCHANGE = "binance"
     PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "AVAX/USDT"]
-TIMEFRAMES = ["1h", "4h", "1d"]
+TIMEFRAMES = ["15m", "1h", "4h", "1d"]
 # v0.4.0: extended from 2023-2025 (bull only) to 2021-2025 to include
 # the 2022 winter regime. Cross-pair macro signals + bear-regime
 # resilience were both blocked by single-regime data in v0.3.0.
