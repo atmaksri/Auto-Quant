@@ -36,3 +36,21 @@ stricter selection gates to be worth revisiting.
 
 Also this round: run.py PAIRS extended to the 17-pair basket;
 user_data/basket_config.json fragment added for future research runs.
+
+## r32 — cross-asset control test: ETH -> BTC (2026-08-24)
+BTCTrendSMA: byte-for-byte identical logic to production ETHTrendSMA r27,
+only the pair changed to BTC/USDT.
+train +0.13 Sharpe / +7.0% / 131 trades — plausible-looking.
+holdout **-0.66 / -5.5%** / WR 31.9% — collapsed out-of-sample.
+
+FINDING (sharpest of the program): the trend edge is genuinely
+ETH-idiosyncratic. It does not transfer even to BTC, the most
+structurally similar asset. This simultaneously:
+1. Confirms single-asset specialization as correct design
+2. Explains the multi-pair failure (r31b) at its root
+3. Validates the train/holdout protocol — train-only evaluation
+   would have admitted this strategy (+0.13 looked fine)
+
+Conclusion: edge lives in the interaction of rule-set AND asset
+microstructure. No generalization without per-asset re-validation,
+and even then, prior evidence says most assets won't have an edge.
