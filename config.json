@@ -39,7 +39,8 @@
     "pair_whitelist": [
       "ETH/USDT"
     ],
-    "pair_blacklist": []
+    "pair_blacklist": [],
+    "ws_enabled": false
   },
   "pairlists": [
     {
